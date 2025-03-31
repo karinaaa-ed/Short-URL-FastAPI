@@ -3,32 +3,62 @@ services:
   db:
     image: postgres:16
     container_name: db_app
-    command: -p 1221
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    command: -p 5432
     expose:
-      - 1221
+      - 5432
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7
     container_name: redis_app
     command: --port 5370
+    ports:
+      - "5370:5370"
     expose:
       - 5370
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-p", "5370", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   app:
     build:
       context: .
     container_name: fastapi_app
-    command: ["/fastapi_app/docker/app.sh"]
+    volumes:
+      - ./migrations:/fastapi_app/migrations
+    command: >
+      sh -c "sleep 5 &&  
+      /fastapi_app/docker/app.sh"
     ports:
-      - 9999:8000
+      - 8000:8000
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   celery:
     build:
       context: .
     container_name: celery_app
+    environment:
+      CELERY_BROKER_URL: "redis://redis_app:5370/0"
+      CELERY_RESULT_BACKEND: "redis://redis_app:5370/0"
     command: ["/fastapi_app/docker/celery.sh", "celery"]
     depends_on:
       - redis
@@ -37,9 +67,16 @@ services:
     build:
       context: .
     container_name: flower_app
+    environment:
+      CELERY_BROKER_URL: "redis://redis_app:5370/0"
+      CELERY_RESULT_BACKEND: "redis://redis_app:5370/0"
     command: ["/fastapi_app/docker/celery.sh", "flower"]
     depends_on:
       - redis
       - celery
     ports:
       - 8888:5555
+
+volumes:
+  postgres_data:
+  redis_data:
