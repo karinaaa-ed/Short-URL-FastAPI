@@ -278,6 +278,3 @@ async def create_public_short_url(
     await db.commit()
     await db.refresh(link)
     return link
-
-
-
