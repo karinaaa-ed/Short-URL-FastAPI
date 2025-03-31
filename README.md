@@ -337,6 +337,12 @@ docker-compose up --build
 docker-compose down
 ```
 
+Запуск сервиса в PyCharm:
 
+![image](https://github.com/user-attachments/assets/f9feebda-5db7-415b-ad62-60d3454026e9)
+
+Созданный контейнер в Docker с выводом логов:
+
+![image](https://github.com/user-attachments/assets/f9a50b2f-944d-4494-a5c8-45446fac248e)
 
 
