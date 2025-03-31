@@ -2,7 +2,7 @@
 
 ## Структура проекта 
 
-Short-URL-FastAPI
+```Short-URL-FastAPI
 ├── docker
 │   ├── app.sh
 │   └── celery.sh
@@ -28,7 +28,7 @@ Short-URL-FastAPI
 │   ├── utils
 │   │   ├── security.py
 │   │   └── short_code.py
-│   ├── `__init__.py  
+│   ├── __init__.py  
 │   ├── app.py
 │   ├── config.py
 │   ├── database.py
@@ -41,6 +41,6 @@ Short-URL-FastAPI
 ├── requirements.txt
 ├── LICENSE
 ├── README.md
-└── .gitignore
+└── .gitignore```
 
 ## 
