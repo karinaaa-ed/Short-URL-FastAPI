@@ -13,7 +13,7 @@ SMTP_PORT = 465
 
 celery = Celery(
     'tasks',
-    broker='redis://localhost:6379'
+    broker='redis://redis_app:5370/0'
 )
 
 def get_template_email(username: str):
