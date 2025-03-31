@@ -2,7 +2,8 @@
 
 ## Структура проекта 
 
-```Short-URL-FastAPI
+```
+Short-URL-FastAPI
 ├── docker
 │   ├── app.sh
 │   └── celery.sh
@@ -41,6 +42,9 @@
 ├── requirements.txt
 ├── LICENSE
 ├── README.md
-└── .gitignore```
+└── .gitignore
+```
 
-## 
+## Описание функционала
+
+
