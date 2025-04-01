@@ -34,11 +34,29 @@ Short-URL-FastAPI
 │   ├── config.py
 │   ├── database.py
 │   └── main.py
+├── tests
+│   ├── functional
+│   │   ├── __init__.py  
+│   │   ├── conftest.py
+│   │   ├── test_api.py
+│   │   ├── test_auth.py
+│   │   └── test_links.py
+│   ├── unit
+│   │   ├── __init__.py  
+│   │   ├── test_app.py
+│   │   ├── test_main.py
+│   │   ├── test_security.py
+│   │   └── test_short_code.py
+│   ├── __init__.py
+│   ├── locustfile.py
+│   ├── pytest.ini
+│   └── test_tasks.py
 ├── alembic.ini
 ├── docker-compose.yml
 ├── Dockerfile
 ├── logging.ini
 ├── requirements.txt
+├── run_tests.sh
 ├── LICENSE
 ├── README.md
 └── .gitignore
@@ -50,15 +68,16 @@ Short-URL-FastAPI
 - `Dockerfile` – Инструкции для сборки Docker-образа приложения
 - `logging.ini` – Настройки логгирования (формат, уровень логирования и т. д.)
 - `requirements.txt` – Список зависимостей Python
+- `run_tests.sh` - Скрипт для запуска тестов
 - `LICENSE` – Лицензия проекта (Apache 2.0)
 - `README.md` – Описание проекта, инструкции по запуску, документация
 - `.gitignore` – Игнорируемые файлы и папки для Git
 
-**2. Папка `docker`**
+**2. Папка `docker/`**
 - `app.sh` – Скрипт для запуска FastAPI-приложения (например, guvicorn)
 - `celery.sh` – Скрипт для запуска Celery (фоновые задачи)
 
-**3. Папка `migrations`**
+**3. Папка `migrations/`**
 
 Файлы для миграций базы данных через Alembic:
 - `versions/` – Папка с SQL-миграциями (создание/изменение таблиц)
@@ -66,31 +85,50 @@ Short-URL-FastAPI
 - `README` – Описание работы с миграциями
 - `script.py.mako` – Шаблон для генерации новых миграций 
 
-**4. Папка `src`**
+**4. Папка `src/`**
 
 Основной код приложения.
-- `auth` – Аутентификация и авторизация:
+- Подпапка `auth/` – Аутентификация и авторизация:
   - `auth.py` – Логика аутентификации (OAuth2, JWT)
   - `db.py` – Модели и запросы к БД, связанные с пользователями
   - `manager.py` – Управление пользователями
   - `schemas.py` – Pydantic-схемы для запросов/ответов (регистрация, логин)
-- `shorturl` – Логика сокращения URL:
+- Подпапка `shorturl/` – Логика сокращения URL:
   - `expired_link.py` – Удаление просроченных ссылок
   - `models.py` – SQLAlchemy-модели для URL
   - `router.py` – FastAPI-роутеры
   - `schemas.py` – Pydantic-схемы для URL (запросы, ответы)
-- `tasks` – Фоновые задачи (Celery):
+- Подпапка `tasks/` – Фоновые задачи (Celery):
   - `router.py` – Роутеры для управления задачами
   - `tasks.py` – Сами задачи (очистка старых URL)
-- `utils` – Вспомогательные модули:
+- Подпапка `utils/` – Вспомогательные модули:
   - `security.py` – Хеширование паролей, JWT-токены
   - `short_code.py` – Генерация коротких кодов для URL
-- Остальные файлы в `src`:
+- Остальные файлы в `src/`:
   - `__init__.py` – Делает папку Python-пакетом
   - `app.py` – Создание FastAPI-приложения
   - `config.py` – Загрузка настроек из .env
   - `database.py` – Подключение к БД (SQLAlchemy, asyncpg)
   - `main.py` – Точка входа (запуск `app.py`,  подключение роутеров)
+
+**4. Папка `tests/`**
+
+Тесты приложения.
+- Подпапка `functional/` - Интеграционные тесты API:
+  - `test_api.py`	- Тесты основных эндпоинтов
+  - `test_auth.py` -	Тесты аутентификации
+  - `test_links.py` -	Тесты для работы с ссылками
+  - `conftest.py` -	Фикстуры для тестов
+- Подпапка `unit/` - Юнит-тесты:
+  - `test_app.py` -	Тесты для app.py
+  - `test_main.py` -	Тесты для main.py
+  - `test_security.py` -	Тесты утилит безопасности
+  - `test_short_code.py` -	Тесты генерации коротких кодов
+- Остальные файлы в `tests/`:
+  - `locustfile.py` -	Нагрузочное тестирование с Locust
+  - `pytest.ini` -	Конфигурация pytest (asyncio-режим)
+  - `test_tasks.py` -	Тесты для фоновых задач
+
 
 ## Описание функционала API
 
@@ -322,20 +360,78 @@ git clone https://github.com/BELCHONOK-afk/Air_Quality_Prediction.git
 cd service
 ```
 
-**2. Сборка и запуск контейнеров**
+**2. Установка зависимостей**
 
-Используйте `docker-compose` для запуска всех компонентов (FastAPI, Celery, Redis, PostgreSQL, Flower):
+```
+pip install -r requirements.txt
+```
+
+**3. Сборка и запуск контейнеров**
+
+
+- Используйте `docker-compose` для запуска всех компонентов (FastAPI, Celery, Redis, PostgreSQL, Flower):
 ```
 docker-compose up --build
 ```
+
+- Создайте миграции и примените их:
+```
+docker-compose exec app alembic revision --autogenerate -m "Initial migration"
+docker-compose exec app alembic upgrade head
+```
+
+- Проверить создание таблиц:
+```
+docker-compose exec db psql -U postgres -d postgres -c "\dt"
+```
+
 После успешного запуска документация будет доступна по адресу: `http://localhost:8000`.
 
-**3. Остановка контейнеров**
+**4. Запуск тестов**
+
+**4.1. Запуск всех тестов**
+
+Из корня проекта выполните:
+```
+pytest tests/
+```
+
+Или используйте скрипт:
+```
+./run_tests.sh
+```
+
+**4.2. Запуск отдельных групп тестов**
+
+```
+pytest tests/unit/              # юнит-тесты
+pytest tests/functional/        # интеграционные тесты
+```
+
+Тесты для конкретного модуля
+
+```
+pytest tests/functional/test_links.py     # тесты для ссылок
+pytest tests/unit/test_short_code.py      # тесты генерации кодов
+```
+
+**4.3. Нагрузочное тестирование (Locust)**
+
+```
+locust -f tests/locustfile.py
+```
+
+Откройте `http://localhost:8089` для управления тестом.
+
+
+**5. Остановка контейнеров**
 
 Для остановки всех сервисов выполните:
 ```
 docker-compose down
 ```
+
+### Данные по запуску
 
 Запуск сервиса в PyCharm:
 
@@ -345,4 +441,7 @@ docker-compose down
 
 ![image](https://github.com/user-attachments/assets/f9a50b2f-944d-4494-a5c8-45446fac248e)
 
+Процент покрытия тестами:
+
+![image](https://github.com/user-attachments/assets/977f5be6-5b3d-4f2e-9fbd-6304780cab0b)
 
