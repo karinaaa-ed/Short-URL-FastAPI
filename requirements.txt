@@ -16,3 +16,10 @@ pydantic~=2.10.6
 starlette~=0.45.3
 passlib
 packaging
+pytest
+pytest-asyncio
+httpx==0.27.0
+pytest-mock
+coverage==7.4.3
+locust==2.20.2
+aiosqlite==0.20.0
