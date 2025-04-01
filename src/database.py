@@ -5,11 +5,15 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import String, DateTime, ForeignKey
 from sqlalchemy.sql import func
-from src.config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
 import uuid
+import os
 from typing import List, Optional
 
-DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+if os.getenv("TESTING"):
+    DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+else:
+    from src.config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
+    DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 
 class Base(DeclarativeBase):
